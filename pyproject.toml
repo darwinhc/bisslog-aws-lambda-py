@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools", "setuptools_scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bisslog_aws"
+dynamic = ["version"]
+description = "It is a lightweight framework to organize and document the key elements of a distributed system, focusing on its use cases and service design. It structures the metadata without exposing any underlying technical or implementation-specific details."
+readme = "README.md"
+authors = [
+    {name = "Darwin Stiven Herrera Cartagena", email = "darwinsherrerac@gmail.com"}
+]
+requires-python = ">=3.8"
+dependencies = []
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent"
+]
+keywords = ["hexagonal", "adapters", "bisslog"]
+[project.urls]
+Homepage = "https://github.com/darwinhc/bisslog-aws-py"
+[project.scripts]
+bisslog_aws = "bisslog_aws.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["bisslog_aws", "bisslog_aws.*"]
+[tool.setuptools_scm]
+version_scheme = "post-release"
+local_scheme = "no-local-version"
+
+[project.optional-dependencies]
+yaml = ["PyYAML>=6.0"]
+timezone = ["backports.zoneinfo>=0.2.1; python_version<'3.9'"]
