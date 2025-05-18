@@ -1,0 +1,3 @@
+bisslog>=0.0.3
+bisslog-schema[yaml]
+boto3
