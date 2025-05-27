@@ -1,9 +1,7 @@
-from typing import Dict, List, Callable, Set
+from typing import Dict, Callable, Set
 
 from bisslog_schema.schema import ServiceInfo
-from bisslog_schema.use_case_code_inspector.use_case_code_metadata import UseCaseCodeInfo, \
-    UseCaseCodeInfoObject, UseCaseCodeInfoClass
-
+from bisslog_schema.use_case_code_inspector.use_case_code_metadata import UseCaseCodeInfo
 
 from .aws_handler_gen_response import AWSHandlerGenResponse
 from .chains.build_use_case_object import BuildUseCaseObject

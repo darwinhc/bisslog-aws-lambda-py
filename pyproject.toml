@@ -18,7 +18,7 @@ classifiers = [
 ]
 keywords = ["hexagonal", "adapters", "bisslog"]
 [project.urls]
-Homepage = "https://github.com/darwinhc/bisslog-aws-py"
+Homepage = "https://github.com/darwinhc/bisslog-aws-lambda-py"
 [project.scripts]
 bisslog_aws_lambda = "bisslog_aws_lambda.cli:main"
 
