@@ -1,5 +1,6 @@
 import os
 from abc import abstractmethod
+from pathlib import Path
 from typing import Any, Optional
 
 from bisslog_schema.schema import ServiceInfo
@@ -35,33 +36,43 @@ class SaveLambdaHandlerResolver(LambdaHandlerResolver):
 
     def __call__(self, service_info: ServiceInfo,
                  use_case_code_info: UseCaseCodeInfo, handler_str: str,
-                 target_folder: Optional[str] = None) -> str:
+                 target_folder: Optional[str] = None, overwrite: bool = False) -> str:
         """
         Saves the handler string to a file named after the use case.
         """
-        path = target_folder or self._find_target_folder()
+        if target_folder:
+            path = Path(target_folder)
+            if path.is_absolute():
+                raise ValueError("Absolute paths are not allowed for target_folder. Use a relative path instead.")
+        else:
+            path = Path(self._find_target_folder())
 
-        folder_path_split = path.split(os.path.sep)
-
-        buffer = None
-        for folder_path_i in folder_path_split:
-            if buffer is None:
-                buffer = folder_path_i
-            else:
-                buffer = os.path.join(buffer, folder_path_i)
-            if not os.path.exists(buffer):
-                os.makedirs(buffer, exist_ok=True)
-
-            init_file_framework_path = os.path.join(buffer, "__init__.py")
-            if not os.path.isfile(init_file_framework_path):
-                open(init_file_framework_path, "a").close()
+        self._ensure_folder_with_init(path)
 
         filename = f"{use_case_code_info.name}_handler.py"
         path_file = os.path.join(path, filename)
-        if not os.path.isfile(path_file):
+        if overwrite or not os.path.isfile(path_file):
             with open(path_file, "w") as f:
                 f.write(handler_str)
 
         return f"Handler saved to {filename}"
+
+    @staticmethod
+    def _ensure_folder_with_init(path: Path) -> None:
+        """
+        Ensures the folder structure exists and contains `__init__.py` in each subfolder.
+
+        Parameters
+        ----------
+        path : Path
+            Relative path where the handler file will be saved.
+        """
+        current = Path()
+        for part in path.parts:
+            current = current / part
+            current.mkdir(exist_ok=True)
+            init_file = current / "__init__.py"
+            if not init_file.exists():
+                init_file.touch()
 
 save_lambda_handler_default = SaveLambdaHandlerResolver()
