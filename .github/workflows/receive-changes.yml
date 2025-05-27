@@ -14,16 +14,16 @@ jobs:
     uses: darwinhc/bisslog-core-py/.github/workflows/pytest.yml@master
     with:
       coverage_threshold: ${{ vars.TEST_COVERAGE_THRESHOLD }}
-      target_folder: "bisslog_aws"
+      target_folder: "bisslog_aws_lambda"
 
   run-linter:
     uses: darwinhc/bisslog-core-py/.github/workflows/pylint.yml@master
     with:
       pylint_threshold: ${{ vars.PYLINT_THRESHOLD }}
-      target_folder: "bisslog_aws"
+      target_folder: "bisslog_aws_lambda"
 
   run-complexity:
     uses: darwinhc/bisslog-core-py/.github/workflows/radon.yml@master
     with:
       radon_threshold: ${{ vars.RADON_THRESHOLD }}
-      target_folder: "bisslog_aws"
+      target_folder: "bisslog_aws_lambda"

@@ -1,6 +1,6 @@
 import pytest
 
-from bisslog_aws.utils.to_snake_case import to_snake_case
+from bisslog_aws_lambda.utils.to_snake_case import to_snake_case
 
 
 def test_to_snake_case():

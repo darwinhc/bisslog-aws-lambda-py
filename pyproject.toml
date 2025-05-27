@@ -3,7 +3,7 @@ requires = ["setuptools", "setuptools_scm"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "bisslog_aws"
+name = "bisslog_aws_lambda"
 dynamic = ["version"]
 description = "It is a lightweight framework to organize and document the key elements of a distributed system, focusing on its use cases and service design. It structures the metadata without exposing any underlying technical or implementation-specific details."
 readme = "README.md"
@@ -20,10 +20,10 @@ keywords = ["hexagonal", "adapters", "bisslog"]
 [project.urls]
 Homepage = "https://github.com/darwinhc/bisslog-aws-py"
 [project.scripts]
-bisslog_aws = "bisslog_aws.cli:main"
+bisslog_aws_lambda = "bisslog_aws_lambda.cli:main"
 
 [tool.setuptools.packages.find]
-include = ["bisslog_aws", "bisslog_aws.*"]
+include = ["bisslog_aws_lambda", "bisslog_aws_lambda.*"]
 [tool.setuptools_scm]
 version_scheme = "post-release"
 local_scheme = "no-local-version"
