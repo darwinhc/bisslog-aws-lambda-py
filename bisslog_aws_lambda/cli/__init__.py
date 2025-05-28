@@ -10,6 +10,8 @@ Commands
 """
 import argparse
 import sys
+import os
+import traceback
 
 from .lambda_aws_packager import command_lambda_aws_packager
 from .lambda_handler_generator_manager_printer import \
@@ -20,6 +22,7 @@ from ..aws_lambda.lambda_handler_generator_manager import (
     lambda_handler_generator_manager_saver,
     lambda_handler_generator_manager_printer
 )
+
 
 
 def main():
@@ -45,6 +48,10 @@ def main():
     SystemExit
         If an invalid command is provided (exit code 1) or execution fails (exit code 2).
     """
+    project_root = os.getcwd()
+
+    if project_root not in sys.path:
+        sys.path.insert(0, project_root)
     parser = argparse.ArgumentParser(prog="bisslog_aws_lambda")
     parser.add_argument('--version', action='version', version='%(prog)s 1.0.0')
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -74,5 +81,6 @@ def main():
                 encoding=args.encoding
             )
     except Exception as e:
+        traceback.print_exc()
         print(f"Error: {str(e)}", file=sys.stderr)
         sys.exit(2)
