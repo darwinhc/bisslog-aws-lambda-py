@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools", "setuptools_scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bisslog_aws_lambda"
+dynamic = ["version"]
+description = "bisslog-lambda-aws is a lightweight Python library for integrating AWS Lambda with a clean, hexagonal architecture. It helps decouple domain logic from infrastructure by generating AWS-compatible handlers and deployment packages — all from metadata."
+readme = "README.md"
+authors = [
+    {name = "Darwin Stiven Herrera Cartagena", email = "darwinsherrerac@gmail.com"}
+]
+requires-python = ">=3.7"
+dependencies = [
+    "bisslog-schema>=0.0.3",
+    "bisslog>=0.0.6"
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent"
+]
+keywords = ["hexagonal", "adapters", "bisslog"]
+
+[project.urls]
+Homepage = "https://github.com/darwinhc/bisslog-aws-lambda-py"
+
+[project.scripts]
+bisslog_aws_lambda = "bisslog_aws_lambda.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["bisslog_aws_lambda", "bisslog_aws_lambda.*"]
+
+[tool.setuptools_scm]
+version_scheme = "post-release"
+local_scheme = "no-local-version"
