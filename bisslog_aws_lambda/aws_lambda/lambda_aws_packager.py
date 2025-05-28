@@ -148,8 +148,7 @@ class LambdaAWSPackager:
 
     @staticmethod
     def _resolve_src_paths(src_folders: Union[str, List[str]], handlers_folder: str) -> Set[Path]:
-        """
-        Resolves and validates source folders to include in the zip.
+        """Resolves and validates source folders to include in the zip.
 
         Parameters
         ----------

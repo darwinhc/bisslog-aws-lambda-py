@@ -27,7 +27,7 @@ def command_lambda_handler_generator_base(command_parser):
     --use-cases-folder-path : str, optional
         Path to the folder containing Python use case implementations.
     --filter-uc : str, optional
-        Optional substring to filter specific use cases by name.
+        substring to filter specific use cases by name.
     --encoding : str, optional
         Encoding to use when reading the metadata file (default: utf-8).
         Must be one of: 'utf-8', 'ascii', 'latin-1'.
