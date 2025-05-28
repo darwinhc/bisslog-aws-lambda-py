@@ -5,29 +5,31 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "bisslog_aws_lambda"
 dynamic = ["version"]
-description = "It is a lightweight framework to organize and document the key elements of a distributed system, focusing on its use cases and service design. It structures the metadata without exposing any underlying technical or implementation-specific details."
+description = "bisslog-lambda-aws is a lightweight Python library for integrating AWS Lambda with a clean, hexagonal architecture. It helps decouple domain logic from infrastructure by generating AWS-compatible handlers and deployment packages — all from metadata."
 readme = "README.md"
 authors = [
     {name = "Darwin Stiven Herrera Cartagena", email = "darwinsherrerac@gmail.com"}
 ]
-requires-python = ">=3.8"
-dependencies = []
+requires-python = ">=3.7"
+dependencies = [
+    "bisslog-schema>=0.0.3",
+    "bisslog>=0.0.6"
+]
 classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent"
 ]
 keywords = ["hexagonal", "adapters", "bisslog"]
+
 [project.urls]
 Homepage = "https://github.com/darwinhc/bisslog-aws-lambda-py"
+
 [project.scripts]
 bisslog_aws_lambda = "bisslog_aws_lambda.cli:main"
 
 [tool.setuptools.packages.find]
 include = ["bisslog_aws_lambda", "bisslog_aws_lambda.*"]
+
 [tool.setuptools_scm]
 version_scheme = "post-release"
 local_scheme = "no-local-version"
-
-[project.optional-dependencies]
-yaml = ["PyYAML>=6.0"]
-timezone = ["backports.zoneinfo>=0.2.1; python_version<'3.9'"]
