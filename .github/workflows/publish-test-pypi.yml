@@ -17,7 +17,7 @@ on:
 
 jobs:
   run-changes-reception:
-    uses: darwinhc/bisslog-aws-lambda/.github/workflows/receive-changes.yml@master
+    uses: darwinhc/bisslog-aws-lambda-py/.github/workflows/receive-changes.yml@master
 
   determine-version:
     runs-on: ubuntu-latest
