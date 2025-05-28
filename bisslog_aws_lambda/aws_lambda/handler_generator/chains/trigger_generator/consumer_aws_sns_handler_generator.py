@@ -8,7 +8,6 @@ routing based on the SNS topic ARN.
 from typing import List, Optional, Tuple
 
 from bisslog_schema.schema import TriggerConsumer
-from bisslog_schema.schema.enums.trigger_type import TriggerEnum
 from bisslog_schema.schema.triggers.trigger_info import TriggerInfo
 
 from .aws_handler_trigger_generator import AWSHandlerTriggerGenerator
@@ -21,34 +20,12 @@ class ConsumerAWSSNSHandlerGenerator(AWSHandlerTriggerGenerator):
 
     This class inspects a list of trigger configurations and generates the
     corresponding Python code required to process SNS events for those triggers.
-
-    Attributes
-    ----------
-    _init : str
-        Initial condition to check if the event source is SNS.
-    _line_topic_arn : str
-        Line of code to extract the SNS topic ARN from the event record.
     """
 
-    _init = 'if event.get("Records") and event["Records"][0].get("EventSource") == "aws:sns":'
-    _line_topic_arn = 'topic_arn = record.get("EventSubscriptionArn", "")'
-
-    @staticmethod
-    def _generate_conditional_by_topic(topic: str) -> str:
-        """
-        Generate a conditional line of code to filter by SNS topic ARN.
-
-        Parameters
-        ----------
-        topic : str
-            The name or identifier of the SNS topic.
-
-        Returns
-        -------
-        str
-            A conditional string that checks if the topic name is in the ARN.
-        """
-        return f'if "{topic}" in topic_arn:'
+    main_conditional = 'if event.get("Records") and ' \
+                       'event["Records"][0].get("EventSource") == "aws:sns":'
+    name_standard_mapper = "mapper_consumer_sns"
+    _line_queue_arn = 'queue_arn = record.get("EventSubscriptionArn", "")'
 
     def __call__(self, triggers: List[TriggerInfo],
                  uc_var_name: str) -> Optional[AWSHandlerGenResponse]:
@@ -67,46 +44,49 @@ class ConsumerAWSSNSHandlerGenerator(AWSHandlerTriggerGenerator):
         Optional[AWSHandlerGenResponse]
             A handler generation result with the build and handler code, or None if not applicable.
         """
-        consumer_triggers = [
+        triggers_ok = [
             trigger for trigger in triggers
-            if trigger.type == TriggerEnum.CONSUMER and isinstance(trigger.options, TriggerConsumer)
+            if isinstance(trigger.options, TriggerConsumer)
         ]
-        if not consumer_triggers:
+        if not triggers_ok:
             return None
 
-        is_single = len(consumer_triggers) == 1
+
+        is_single = len(triggers_ok) == 1
         depth = 1
-        lines: List[Tuple[str, int]] = [(self._init, depth)]
+        lines: List[Tuple[str, int]] = [(self.main_conditional, depth)]
         depth += 1
 
-        pre_build_lines = [self.generate_mapper("mapper_consumer_sns", {"Message": "event"})]
+        pre_build_lines = [
+            self.generate_mapper("mapper_consumer_sns", {"Message": "event"})]
         lines.append(("response = []", depth))
         lines.append(('for record in event["Records"]:', depth))
         depth += 1
 
         depth_before = depth
-        for i, trigger in enumerate(consumer_triggers):
+        for i, trigger in enumerate(triggers_ok):
             depth = depth_before
             keyname = trigger.keyname
             options = trigger.options
-            lines.append(("mapped_standard_event_sns = mapper_consumer_sns.map(record['Sns'])", depth))
+            lines.append(
+                ("mapped_standard_event_sns = mapper_consumer_sns.map(record['Sns'])", depth))
 
             mapper_name = self.generate_mapper_name(trigger.type.val + "_sns", keyname, i)
-            conditional = self._generate_conditional_by_topic(options.queue)
+            conditional = f'if "{options.queue}" in queue_arn:'
+
+            if not is_single:
+                lines.append((self._line_queue_arn, depth))
+                lines.append((conditional, depth))
+                depth += 1
+            else:
+                lines.append((self.comm(self._line_queue_arn), depth))
+                lines.append((self.comm(conditional), depth))
 
             if options.mapper:
                 pre_build_lines.append(self.generate_mapper(mapper_name, options.mapper))
 
-            if not is_single:
-                lines.append((self._line_topic_arn, depth))
-                lines.append((conditional, depth))
-                depth += 1
-            else:
-                lines.append(("# " + self._line_topic_arn, depth))
-                lines.append(("# " + conditional, depth))
-
-            if options.mapper:
-                lines.append((f"request_to_uc : dict = {mapper_name}.map(mapped_standard_event_sns)", depth))
+                lines.append(
+                    (f"request_to_uc : dict = {mapper_name}.map(mapped_standard_event_sns)", depth))
             else:
                 lines.append(("request_to_uc = mapped_standard_event_sns", depth))
 

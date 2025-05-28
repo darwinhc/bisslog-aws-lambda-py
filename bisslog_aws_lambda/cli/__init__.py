@@ -12,14 +12,14 @@ import argparse
 import sys
 
 from .lambda_aws_packager import command_lambda_aws_packager
+from .lambda_handler_generator_manager_printer import \
+    command_lambda_handler_generator_manager_printer
 from .lambda_handler_generator_manager_saver import command_lambda_handler_generator_manager_saver
 from ..aws_lambda.lambda_aws_packager import lambda_aws_packager
 from ..aws_lambda.lambda_handler_generator_manager import (
     lambda_handler_generator_manager_saver,
     lambda_handler_generator_manager_printer
 )
-
-
 
 
 def main():
@@ -51,6 +51,7 @@ def main():
 
     command_lambda_aws_packager(subparsers)
     command_lambda_handler_generator_manager_saver(subparsers)
+    command_lambda_handler_generator_manager_printer(subparsers)
 
     args = parser.parse_args()
 

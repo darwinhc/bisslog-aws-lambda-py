@@ -8,7 +8,6 @@ routing based on the queue ARN.
 from typing import List, Optional, Tuple
 
 from bisslog_schema.schema import TriggerConsumer
-from bisslog_schema.schema.enums.trigger_type import TriggerEnum
 from bisslog_schema.schema.triggers.trigger_info import TriggerInfo
 
 from .aws_handler_trigger_generator import AWSHandlerTriggerGenerator
@@ -24,31 +23,16 @@ class ConsumerAWSSQSHandlerGenerator(AWSHandlerTriggerGenerator):
 
     Attributes
     ----------
-    _init : str
+    main_conditional : str
         Initial condition to check if the event source is SQS.
     _line_queue_arn : str
         Line of code to extract the SQS queue ARN from the event record.
     """
 
-    _init = 'if event.get("Records") and event["Records"][0].get("eventSource") == "aws:sqs":'
+    main_conditional = 'if event.get("Records") and ' \
+                       'event["Records"][0].get("eventSource") == "aws:sqs":'
     _line_queue_arn = 'queue_arn = record.get("eventSourceARN", "")'
 
-    @staticmethod
-    def _generate_conditional_by_queue(queue: str) -> str:
-        """
-        Generate a conditional line of code to filter by queue ARN.
-
-        Parameters
-        ----------
-        queue : str
-            The name or identifier of the SQS queue.
-
-        Returns
-        -------
-        str
-            A conditional string that checks if the queue name is in the ARN.
-        """
-        return f'if "{queue}" in queue_arn:'
 
     def __call__(self, triggers: List[TriggerInfo],
                  uc_var_name: str) -> Optional[AWSHandlerGenResponse]:
@@ -67,44 +51,43 @@ class ConsumerAWSSQSHandlerGenerator(AWSHandlerTriggerGenerator):
         Optional[AWSHandlerGenResponse]
             A handler generation result with the build and handler code, or None if not applicable.
         """
-        consumer_triggers = [
+        triggers_ok = [
             trigger for trigger in triggers
-            if trigger.type == TriggerEnum.CONSUMER and isinstance(trigger.options, TriggerConsumer)
+            if isinstance(trigger.options, TriggerConsumer)
         ]
-        if not consumer_triggers:
+        if not triggers_ok:
             return None
 
-        is_single = len(consumer_triggers) == 1
+        is_single = len(triggers_ok) == 1
         depth = 1
-        lines: List[Tuple[str, int]] = [(self._init, depth)]
+        lines: List[Tuple[str, int]] = [(self.main_conditional, depth)]
         depth += 1
 
-        pre_build_lines = [self.generate_mapper("mapper_consumer_sqs", {"body": "event"})]
+        pre_build_lines = [
+            self.generate_mapper("mapper_consumer_sqs", {"body": "event"})]
         lines.append(("response = []", depth))
         lines.append(('for record in event["Records"]:', depth))
         depth += 1
 
-
-        for i, trigger in enumerate(consumer_triggers):
+        depth_before = depth
+        for i, trigger in enumerate(triggers_ok):
+            depth = depth_before
             keyname = trigger.keyname
             options = trigger.options
             lines.append(("mapped_standard_event_sqs = mapper_consumer_sqs.map(record)", depth))
 
-            mapper_name = self.generate_mapper_name(trigger.type.val + "_sqs", keyname, i)
-            conditional = self._generate_conditional_by_queue(options.queue)
-
-            if options.mapper:
-                pre_build_lines.append(self.generate_mapper(mapper_name, options.mapper))
-
+            conditional = f'if "{options.queue}" in queue_arn:'
             if not is_single:
                 lines.append((self._line_queue_arn, depth))
                 lines.append((conditional, depth))
                 depth += 1
             else:
-                lines.append(("# " + self._line_queue_arn, depth))
-                lines.append(("# " + conditional, depth))
+                lines.append((self.comm(self._line_queue_arn), depth))
+                lines.append((self.comm(conditional), depth))
 
             if options.mapper:
+                mapper_name = self.generate_mapper_name(trigger.type.val + "_sqs", keyname, i)
+                pre_build_lines.append(self.generate_mapper(mapper_name, options.mapper))
                 lines.append(
                     (f"request_to_uc : dict = {mapper_name}.map(mapped_standard_event_sqs)", depth))
             else:
@@ -113,7 +96,7 @@ class ConsumerAWSSQSHandlerGenerator(AWSHandlerTriggerGenerator):
             lines.append((f"uc_response = {uc_var_name}(**request_to_uc)", depth))
             lines.append(("response.append(uc_response)", depth))
 
-        depth -= 1 + int(not is_single)
+        depth = depth_before
         lines.append(('return {"statusCode": 200, "body": response}', depth))
 
         return AWSHandlerGenResponse(

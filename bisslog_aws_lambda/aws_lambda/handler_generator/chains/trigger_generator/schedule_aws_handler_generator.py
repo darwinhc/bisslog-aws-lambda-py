@@ -1,8 +1,8 @@
 """
 Module for generating AWS Lambda handler code for EventBridge-based schedule triggers.
 
-This module defines a generator class that creates handler code to process
-EventBridge events, mapping them to use cases defined in the application.
+This generator produces handler code that maps scheduled EventBridge events
+(e.g., triggered by cron expressions) to application use cases.
 """
 from typing import List, Optional, Tuple
 
@@ -16,18 +16,14 @@ from ...aws_handler_gen_response import AWSHandlerGenResponse
 
 class ScheduleAWSHandlerGenerator(AWSHandlerTriggerGenerator):
     """
-    Generates handler code for AWS EventBridge schedule triggers.
+    Generates handler code for AWS EventBridge schedule (cron) triggers.
 
-    This class inspects a list of trigger configurations and generates the
-    corresponding Python code required to process EventBridge events.
-
-    Attributes
-    ----------
-    _init : str
-        Initial condition to check if the event is from EventBridge.
+    This class inspects trigger definitions and builds handler logic
+    that dispatches scheduled events to a designated use case.
     """
 
-    _init = 'if event.get("source") == "aws.events" and event.get("detail-type") == "Scheduled Event":'
+    main_conditional = 'if event.get("source") == "aws.events" ' \
+                       'and event.get("detail-type") == "Scheduled Event":'
 
     @staticmethod
     def _generate_conditional_by_source(source: str) -> str:
@@ -63,18 +59,18 @@ class ScheduleAWSHandlerGenerator(AWSHandlerTriggerGenerator):
         Optional[AWSHandlerGenResponse]
             A handler generation result with the build and handler code, or None if not applicable.
         """
-        schedule_triggers = [
-            trigger for trigger in triggers
-            if trigger.type == TriggerEnum.SCHEDULE and isinstance(trigger.options, TriggerSchedule)
-        ]
+        schedule_triggers = list(
+            filter((lambda t: t.type == TriggerEnum.SCHEDULE and
+                              isinstance(t.options, TriggerSchedule)), triggers))
         if not schedule_triggers:
             return None
 
         depth = 1
-        lines: List[Tuple[str, int]] = [(self._init, depth)]
+        lines: List[Tuple[str, int]] = [(self.main_conditional, depth)]
         depth += 1
 
-        pre_build_lines = [self.generate_mapper("mapper_schedule_event_bridge", {"detail": "event"})]
+        pre_build_lines = [
+            self.generate_mapper("mapper_schedule_event_bridge", {"detail": "event"})]
         lines.append(("response = []", depth))
 
         depth_before = depth
