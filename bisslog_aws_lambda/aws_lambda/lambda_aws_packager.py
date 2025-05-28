@@ -60,13 +60,16 @@ class LambdaAWSPackager:
         if handler_name is None:
             res = []
             for handler_py_module_name in os.listdir(handlers_folder):
-                if handler_py_module_name.endswith(".py"):
-                    zip_file = self.generate_zip_file(
-                        handler_py_module_name[:-3],
-                        zip_name=zip_name,
-                        src_folders=src_folders,
-                        handlers_folder=handlers_folder)
-                    res.append(zip_file)
+                if not handler_py_module_name.endswith(".py"):
+                    continue
+                if handler_py_module_name.startswith("__"):
+                    continue
+                zip_file = self.generate_zip_file(
+                    handler_py_module_name[:-3],
+                    zip_name=zip_name,
+                    src_folders=src_folders,
+                    handlers_folder=handlers_folder)
+                res.append(zip_file)
             return res
         return [self.generate_zip_file(handler_name=handler_name, src_folders=src_folders,
                                        handlers_folder=handlers_folder, zip_name=zip_name)]
@@ -148,8 +151,7 @@ class LambdaAWSPackager:
 
     @staticmethod
     def _resolve_src_paths(src_folders: Union[str, List[str]], handlers_folder: str) -> Set[Path]:
-        """
-        Resolves and validates source folders to include in the zip.
+        """Resolves and validates source folders to include in the zip.
 
         Parameters
         ----------
