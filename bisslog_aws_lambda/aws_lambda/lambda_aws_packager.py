@@ -10,7 +10,7 @@ import tempfile
 import zipfile
 from pathlib import Path
 from shutil import move
-from typing import Optional, List, Union
+from typing import Optional, List, Union, Set
 
 
 class LambdaAWSPackager:
@@ -147,7 +147,7 @@ class LambdaAWSPackager:
         return handler_path
 
     @staticmethod
-    def _resolve_src_paths(src_folders: Union[str, List[str]], handlers_folder: str) -> set[Path]:
+    def _resolve_src_paths(src_folders: Union[str, List[str]], handlers_folder: str) -> Set[Path]:
         """
         Resolves and validates source folders to include in the zip.
 
