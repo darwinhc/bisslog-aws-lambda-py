@@ -8,6 +8,7 @@ strategy (e.g., printing or saving).
 from typing import Callable, Optional, Any
 
 from bisslog_schema import read_full_service_metadata
+from bisslog_schema.setup import get_setup_metadata
 from bisslog_schema.use_case_code_inspector.use_case_code_metadata import UseCaseCodeInfo
 
 from .handler_generator.handler_generator import generate_handler
@@ -53,12 +54,14 @@ class LambdaHandlerGeneratorManager:
     """
 
     def __init__(self, resolver: Optional[Callable[..., Any]] = None,
-                 generate_handler_resolver: Optional[Callable[..., str]] = None):
+                 generate_handler_resolver: Optional[Callable[..., str]] = None,
+                 eager_import: Optional[Callable[[str], None]] = None):
         self.resolver = resolver or default_resolver
         self.generate_handler = generate_handler_resolver
+        self._eager_import = eager_import or (lambda x: None)
 
     def __call__(
-            self, *args, metadata_file: Optional[str] = None,
+            self, *args, metadata_file: Optional[str] = None, infra_path: Optional[str] = None,
             use_cases_folder_path: Optional[str] = None, filter_uc: Optional[str] = None,
             encoding: str = "utf-8", **kwargs):
         """
@@ -88,6 +91,11 @@ class LambdaHandlerGeneratorManager:
 
         if filter_uc:
             use_cases = {k: v for k, v in use_cases.items() if filter_uc in k}
+
+        # Ensure the infrastructure path is imported if provided
+        self._eager_import(infra_path)
+        setup_info = get_setup_metadata()
+
 
         for use_case_keyname, use_case_code_info in use_cases.items():
             handler_str = self.generate_handler(service_info, use_case_code_info)

@@ -7,9 +7,11 @@ produce a fully functional Lambda handler for a given use case based on its trig
 from typing import Callable
 
 from bisslog_schema.schema import ServiceInfo
+from bisslog_schema.setup.setup_metadata import BisslogSetup
 from bisslog_schema.use_case_code_inspector.use_case_code_metadata import UseCaseCodeInfo
 
 from .aws_handler_gen_response import AWSHandlerGenResponse
+from .chains.build_setup import BuildSetup
 from .chains.build_use_case_object import BuildUseCaseObject
 from .chains.default_error_handler_generator import DefaultHandlerGenerator
 from .chains.manager_trigger_handler_generator import ManagerTriggerHandlerGenerator
@@ -36,12 +38,15 @@ class HandlerGenerator:
 
     def __init__(self, manager_trigger_gen: Callable[..., AWSHandlerGenResponse],
                  build_use_case_obj_gen: Callable[..., AWSHandlerGenResponse],
-                 default_handler_gen: Callable[..., AWSHandlerGenResponse]):
+                 default_handler_gen: Callable[..., AWSHandlerGenResponse],
+                 setup_gen: Callable[[BisslogSetup], AWSHandlerGenResponse]):
         self._manager_trigger_gen = manager_trigger_gen
         self._build_use_case_obj_gen = build_use_case_obj_gen
         self._default_handler_gen = default_handler_gen
+        self._generate_setup_code = setup_gen
 
-    def __call__(self, service_info: ServiceInfo, use_case_code_info: UseCaseCodeInfo) -> str:
+    def __call__(self, service_info: ServiceInfo, use_case_code_info: UseCaseCodeInfo,
+                 bisslog_setup: BisslogSetup) -> str:
         """
         Generates full handler code for a given use case based on its trigger metadata.
 
@@ -51,6 +56,8 @@ class HandlerGenerator:
             Metadata of the service including all use cases and their triggers.
         use_case_code_info : UseCaseCodeInfo
             Static code metadata for the specific use case.
+        bisslog_setup : BisslogSetup
+            Bisslog setup metadata, which may include additional configuration.
 
         Returns
         -------
@@ -73,6 +80,8 @@ class HandlerGenerator:
 
         res = AWSHandlerGenResponse(importing={"bisslog.utils.mapping": {"Mapper"}})
 
+        res += self._generate_setup_code(bisslog_setup)
+
         res_build_use_obj = self._build_use_case_obj_gen(use_case_code_info)
         res += res_build_use_obj
         if not isinstance(res_build_use_obj.extra, dict) \
@@ -92,5 +101,6 @@ class HandlerGenerator:
 generate_handler = HandlerGenerator(
     ManagerTriggerHandlerGenerator(),
     BuildUseCaseObject(),
-    DefaultHandlerGenerator()
+    DefaultHandlerGenerator(),
+    BuildSetup()
 )

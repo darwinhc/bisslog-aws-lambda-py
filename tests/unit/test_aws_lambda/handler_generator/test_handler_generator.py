@@ -1,6 +1,8 @@
 import pytest
 from unittest.mock import MagicMock
 
+from bisslog_schema.setup import BisslogSetup
+
 from bisslog_aws_lambda.aws_lambda.handler_generator.handler_generator import HandlerGenerator
 from bisslog_aws_lambda.aws_lambda.handler_generator.aws_handler_gen_response import AWSHandlerGenResponse
 
@@ -34,6 +36,14 @@ def mock_build_use_case_gen():
     mock.return_value = response
     return mock
 
+@pytest.fixture
+def mock_build_setup():
+    mock = MagicMock()
+    response = AWSHandlerGenResponse(
+        build="setup_func()",
+        importing={"my.module.setup": {"setup_func"}})
+    mock.return_value = response
+    return mock
 
 @pytest.fixture
 def mock_trigger_handler_gen():
@@ -62,16 +72,20 @@ def test_handler_generator_successful_call(
     mock_use_case_code_info,
     mock_build_use_case_gen,
     mock_trigger_handler_gen,
-    mock_default_handler_gen
+    mock_default_handler_gen,
+    mock_build_setup
 ):
     generator = HandlerGenerator(
         manager_trigger_gen=mock_trigger_handler_gen,
         build_use_case_obj_gen=mock_build_use_case_gen,
-        default_handler_gen=mock_default_handler_gen
+        default_handler_gen=mock_default_handler_gen,
+        setup_gen=mock_build_setup
     )
 
-    code = generator(mock_service_info, mock_use_case_code_info)
+    bisslog_setup = BisslogSetup()
+    code = generator(mock_service_info, mock_use_case_code_info, bisslog_setup)
 
+    mock_build_setup.assert_called_once_with(bisslog_setup)
     assert "def lambda_handler(event, context):" in code
     assert "uc = UseCase()" in code
     assert "uc.execute()" in code
@@ -80,22 +94,23 @@ def test_handler_generator_successful_call(
     assert "from my.mapper import Mapper" in code
 
 
-def test_raises_runtime_error_if_inputs_are_none(mock_build_use_case_gen):
+def test_raises_runtime_error_if_inputs_are_none(mock_build_use_case_gen, mock_build_setup):
     generator = HandlerGenerator(
         manager_trigger_gen=MagicMock(),
         build_use_case_obj_gen=mock_build_use_case_gen,
-        default_handler_gen=MagicMock()
+        default_handler_gen=MagicMock(),
+        setup_gen=mock_build_setup
     )
 
     with pytest.raises(RuntimeError):
-        generator(None, None)
+        generator(None, None, None)
 
 
 def test_raises_value_error_if_varname_missing(
     mock_service_info,
     mock_use_case_code_info,
     mock_trigger_handler_gen,
-    mock_default_handler_gen
+    mock_default_handler_gen, mock_build_setup
 ):
     bad_build_gen = MagicMock()
     bad_response = AWSHandlerGenResponse(extra={})  # no var_name
@@ -104,8 +119,11 @@ def test_raises_value_error_if_varname_missing(
     generator = HandlerGenerator(
         manager_trigger_gen=mock_trigger_handler_gen,
         build_use_case_obj_gen=bad_build_gen,
-        default_handler_gen=mock_default_handler_gen
+        default_handler_gen=mock_default_handler_gen,
+        setup_gen=mock_build_setup
     )
 
+    bisslog_setup = BisslogSetup()
+
     with pytest.raises(ValueError):
-        generator(mock_service_info, mock_use_case_code_info)
+        generator(mock_service_info, mock_use_case_code_info, bisslog_setup)
