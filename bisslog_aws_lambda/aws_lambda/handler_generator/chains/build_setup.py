@@ -48,9 +48,9 @@ class BuildSetup(AWSHandlerGenerator):
         RuntimeError
             If the setup function declares an invalid number of parameters.
         """
-        imports = {}
         if bisslog_setup is None:
             return None
+        imports = {}
 
         if bisslog_setup.setup_function is not None:
             setup_func = bisslog_setup.setup_function
@@ -65,10 +65,10 @@ class BuildSetup(AWSHandlerGenerator):
             else:
                 raise RuntimeError(f"Invalid number of parameters for setup function: {setup_func.n_params}")
         else:
-            runtime_setup = bisslog_setup.runtime.get(RuntimeType.LAMBDA.value)
+            runtime_setup = bisslog_setup.runtime.get(RuntimeType.LAMBDA)
             if runtime_setup is None:
                 return None
             imports[runtime_setup.module] = [runtime_setup.function_name]
-            prebuild_lines = [f"{runtime_setup.module}()"]
+            prebuild_lines = [f"{runtime_setup.function_name}()"]
 
         return AWSHandlerGenResponse(build="\n".join(prebuild_lines), importing=imports)
