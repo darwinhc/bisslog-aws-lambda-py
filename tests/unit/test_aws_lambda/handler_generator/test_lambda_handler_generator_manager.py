@@ -41,7 +41,8 @@ def test_handler_generator_manager_calls_all_components(
 ):
     manager = LambdaHandlerGeneratorManager(
         resolver=mock_resolver,
-        generate_handler_resolver=mock_generate_handler
+        generate_handler_resolver=mock_generate_handler,
+        eager_import=MagicMock()
     )
 
     manager(metadata_file="path.yaml", use_cases_folder_path="code/", encoding="utf-8")
@@ -54,7 +55,8 @@ def test_handler_generator_manager_calls_all_components(
 def test_filter_use_case_applies(mock_generate_handler, mock_resolver, mock_metadata):
     manager = LambdaHandlerGeneratorManager(
         resolver=mock_resolver,
-        generate_handler_resolver=mock_generate_handler
+        generate_handler_resolver=mock_generate_handler,
+        eager_import=MagicMock()
     )
 
     manager(metadata_file="x", use_cases_folder_path="y", filter_uc="get")
