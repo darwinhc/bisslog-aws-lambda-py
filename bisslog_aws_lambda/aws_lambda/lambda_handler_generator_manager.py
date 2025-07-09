@@ -8,6 +8,8 @@ strategy (e.g., printing or saving).
 from typing import Callable, Optional, Any
 
 from bisslog_schema import read_full_service_metadata
+from bisslog_schema.eager_import_module_or_package import EagerImportModulePackage
+from bisslog_schema.setup import get_setup_metadata
 from bisslog_schema.use_case_code_inspector.use_case_code_metadata import UseCaseCodeInfo
 
 from .handler_generator.handler_generator import generate_handler
@@ -52,13 +54,15 @@ class LambdaHandlerGeneratorManager:
         Function that generates handler code given the service and use case info.
     """
 
-    def __init__(self, resolver: Optional[Callable[..., Any]] = None,
-                 generate_handler_resolver: Optional[Callable[..., str]] = None):
+    def __init__(self, resolver: Optional[Callable[..., Any]],
+                 generate_handler_resolver: Optional[Callable[..., str]],
+                 eager_import: Optional[Callable[[str], None]]):
         self.resolver = resolver or default_resolver
         self.generate_handler = generate_handler_resolver
+        self._eager_import = eager_import
 
     def __call__(
-            self, *args, metadata_file: Optional[str] = None,
+            self, *args, metadata_file: Optional[str] = None, infra_path: Optional[str] = None,
             use_cases_folder_path: Optional[str] = None, filter_uc: Optional[str] = None,
             encoding: str = "utf-8", **kwargs):
         """
@@ -89,15 +93,19 @@ class LambdaHandlerGeneratorManager:
         if filter_uc:
             use_cases = {k: v for k, v in use_cases.items() if filter_uc in k}
 
+        # Ensure the infrastructure path is imported if provided
+        self._eager_import(infra_path)
+        setup_info = get_setup_metadata()
+
         for use_case_keyname, use_case_code_info in use_cases.items():
-            handler_str = self.generate_handler(service_info, use_case_code_info)
+            handler_str = self.generate_handler(service_info, use_case_code_info, setup_info)
             print(f"{'-' * 20}\nHandler for {use_case_keyname}")
             res = self.resolver(service_info, use_case_code_info, handler_str, *args, **kwargs)
             print(f"Resolver result for {use_case_keyname}: {res}")
 
 def builder_lambda_handler_generator_manager(x):
     """Factory function to create a LambdaHandlerGeneratorManager with a specific resolver."""
-    return LambdaHandlerGeneratorManager(x, generate_handler)
+    return LambdaHandlerGeneratorManager(x, generate_handler, EagerImportModulePackage())
 
 lambda_handler_generator_manager_printer = builder_lambda_handler_generator_manager(None)
 lambda_handler_generator_manager_saver = builder_lambda_handler_generator_manager(

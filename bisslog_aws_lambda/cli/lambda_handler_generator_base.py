@@ -43,6 +43,11 @@ def command_lambda_handler_generator_base(command_parser):
         help="Path to the folder containing use cases",
         default=None,
     )
+    command_parser.add_argument(
+        "--infra-path", type=str, required=False,
+        help="Path to the infrastructure folder/module (optional, defaults to None)",
+        default=None
+    )
 
     command_parser.add_argument(
         "--filter-uc",
