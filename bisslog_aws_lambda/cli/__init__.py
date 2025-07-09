@@ -69,6 +69,7 @@ def main():
             lambda_handler_generator_manager_saver(
                 metadata_file=args.metadata_file,
                 use_cases_folder_path=args.use_cases_folder_path,
+                infra_path=args.infra_path,
                 filter_uc=args.filter_uc,
                 encoding=args.encoding,
                 target_folder=args.target_folder
@@ -77,6 +78,7 @@ def main():
             lambda_handler_generator_manager_printer(
                 metadata_file=args.metadata_file,
                 use_cases_folder_path=args.use_cases_folder_path,
+                infra_path=args.infra_path,
                 filter_uc=args.filter_uc,
                 encoding=args.encoding
             )

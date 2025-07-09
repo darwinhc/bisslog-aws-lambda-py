@@ -26,7 +26,7 @@ class LambdaAWSPackager:
             self,
             handler_name: str = None,
             src_folders: Union[str, List[str]] = "src",
-            handlers_folder: str = "framework/lambda_aws",
+            handlers_folder: str = "infra/entry_points/lambda_aws",
             zip_name: Optional[str] = None
     ) -> List[str]:
         """
@@ -42,7 +42,7 @@ class LambdaAWSPackager:
         src_folders : Union[str, List[str]], optional
             Folders containing Python source files to include (default is "src").
         handlers_folder : str, optional
-            Directory where handler files are located (default is "framework/lambda_aws").
+            Directory where handler files are located (default is "infra/entry_points/lambda_aws").
         zip_name : str, optional
             Custom name for the output zip file. Ignored in batch mode.
 
@@ -78,7 +78,7 @@ class LambdaAWSPackager:
             self,
             handler_name: str,
             src_folders: Union[str, List[str]] = "src",
-            handlers_folder: str = "framework/lambda_aws",
+            handlers_folder: str = "infra/entry_points/lambda_aws",
             zip_name: Optional[str] = None
     ) -> str:
         """
@@ -91,7 +91,7 @@ class LambdaAWSPackager:
         src_folders : Union[str, List[str]], optional
             One or more folders containing `.py` files (default is "src").
         handlers_folder : str, optional
-            Folder containing handler files (default is "framework/lambda_aws").
+            Folder containing handler files (default is "infra/entry_points/lambda_aws").
         zip_name : str, optional
             Output zip filename (defaults to "{handler_name}.zip").
 

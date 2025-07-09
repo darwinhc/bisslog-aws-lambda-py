@@ -1,2 +1,2 @@
-bisslog>=0.0.6
+bisslog>=0.0.7
 bisslog-schema>=0.0.3
