@@ -1,6 +1,8 @@
 import pytest
 from unittest.mock import Mock
 
+from bisslog_schema.setup import BisslogSetup, BisslogRuntimeConfig
+
 from bisslog_aws_lambda.aws_lambda.handler_generator.chains.build_setup import BuildSetup
 from bisslog_aws_lambda.aws_lambda.handler_generator.aws_handler_gen_response import AWSHandlerGenResponse
 from bisslog_schema.setup.runtime_type import RuntimeType
@@ -66,20 +68,14 @@ def test_setup_function_multiple_params(generator):
 
 
 def test_runtime_fallback_used(generator):
-    runtime_func = Mock()
-    runtime_func.module = "alt_init"
-    runtime_func.function_name = "lambda_setup"
+    runtime_func = BisslogRuntimeConfig("alt_init", "lambda_setup")
 
-    mock_setup = Mock()
-    mock_setup.setup_function = None
-    mock_setup.runtime = {
-        RuntimeType.LAMBDA.value: runtime_func
-    }
+    build_setup = BisslogSetup(None, {RuntimeType.LAMBDA: runtime_func})
 
-    result = generator(mock_setup)
+    result = generator(build_setup)
 
     assert isinstance(result, AWSHandlerGenResponse)
-    assert result.build == "alt_init()"
+    assert result.build == "lambda_setup()"
     assert result.importing == {"alt_init": ["lambda_setup"]}
 
 
